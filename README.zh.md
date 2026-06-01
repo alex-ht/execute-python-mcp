@@ -47,44 +47,63 @@ execute-python-mcp
 
 ## 在 OpenClaw 中註冊此 MCP Server
 
-OpenClaw 提供 `/mcp` 指令來管理 MCP servers（寫入 `mcp.servers` 配置）。
+OpenClaw 提供兩種註冊 MCP Server 的方式，請依需求選擇：
 
-### 最簡單註冊方式（推薦）
+### 1. 永久預設註冊（推薦）
 
-在 OpenClaw 聊天視窗中輸入：
+使用 CLI 指令 `openclaw mcp set`。這會把設定寫入 OpenClaw 的配置文件中，之後所有新對話都會自動載入，無需每次手動設定。
+
+```bash
+# 推薦寫法（使用已安裝的指令）
+openclaw mcp set execute-python '{"command":"execute-python-mcp"}'
+```
+
+如果 `execute-python-mcp` 不在 PATH 中（例如使用 conda、mise、asdf 或自訂路徑）：
+
+```bash
+openclaw mcp set execute-python '{"command":"/home/alex/.local/bin/execute-python-mcp"}'
+```
+
+更穩健的 `python -m` 寫法（建議在有 PATH 問題時使用）：
+
+```bash
+openclaw mcp set execute-python '{"command":"python","args":["-m","execute_python_mcp"]}'
+```
+
+執行後，該 Server 就會被永久註冊。
+
+### 2. 透過聊天快速註冊（臨時 / 單次對話）
+
+你也可以直接在 OpenClaw 聊天視窗中使用斜線指令快速註冊：
 
 ```bash
 /mcp set execute-python={"command":"execute-python-mcp"}
 ```
 
-如果你的 `execute-python-mcp` 在特定路徑（例如使用 conda / mise / asdf）：
+這種方式適合快速測試，但持久性通常不如使用 `openclaw mcp set`。
+
+### 查看 / 移除已註冊的 Server
 
 ```bash
-/mcp set execute-python={"command":"/home/alex/.local/bin/execute-python-mcp"}
-```
+# 使用 CLI（推薦）
+openclaw mcp list
+openclaw mcp show execute-python
+openclaw mcp unset execute-python
 
-或使用完整 python -m 方式（較穩）：
-
-```bash
-/mcp set execute-python={"command":"python","args":["-m","execute_python_mcp"]}
-```
-
-### 一次設定多個環境變數（進階）
-
-```json
-/mcp set execute-python={"command":"execute-python-mcp","env":{"PYTHONPATH":"/home/alex/myproject","MY_API_KEY":"..."}}
-```
-
-### 查看 / 移除
-
-```bash
+# 或在聊天中執行
 /mcp show execute-python
 /mcp unset execute-python
 ```
 
-設定完成後，**重啟 OpenClaw** 或該 Agent 的會話，即可讓工具生效。
-
 工具在 Agent 中會以 `execute_python` 這個名字出現（不是 `mcp_execute-python_execute_python`）。
+
+### 進階：設定環境變數
+
+註冊時可以一併傳入環境變數：
+
+```bash
+openclaw mcp set execute-python '{"command":"execute-python-mcp","env":{"PYTHONPATH":"/home/alex/myproject","MY_API_KEY":"..."}}'
+```
 
 ## 簡單驗證方式（讓 Agent 測試）
 

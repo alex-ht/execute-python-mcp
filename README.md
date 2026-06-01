@@ -47,44 +47,63 @@ This process runs continuously and communicates with MCP clients via stdin/stdou
 
 ## Registering in OpenClaw
 
-OpenClaw provides the `/mcp` command to manage MCP servers (writes to `mcp.servers` configuration).
+OpenClaw provides two ways to register MCP servers. Choose based on your needs:
 
-### Recommended Registration
+### 1. Permanent Default Registration (Recommended)
 
-In the OpenClaw chat, run:
+Use the CLI command `openclaw mcp set`. This writes the server into OpenClaw's configuration, so it becomes available by default in all new sessions without manual setup.
+
+```bash
+# Recommended (uses the installed command)
+openclaw mcp set execute-python '{"command":"execute-python-mcp"}'
+```
+
+If `execute-python-mcp` is not in your PATH (e.g. conda, mise, asdf, or custom location):
+
+```bash
+openclaw mcp set execute-python '{"command":"/home/alex/.local/bin/execute-python-mcp"}'
+```
+
+More robust `python -m` form (recommended when PATH issues occur):
+
+```bash
+openclaw mcp set execute-python '{"command":"python","args":["-m","execute_python_mcp"]}'
+```
+
+After running the command, the server will be persistently registered.
+
+### 2. Quick Registration via Chat (Temporary / Per-Session)
+
+You can also register directly inside an OpenClaw chat using the slash command:
 
 ```bash
 /mcp set execute-python={"command":"execute-python-mcp"}
 ```
 
-If `execute-python-mcp` is in a specific location (e.g., conda / mise / asdf):
+This is convenient for quick testing but is generally less persistent than using `openclaw mcp set`.
+
+### View / Remove Registered Servers
 
 ```bash
-/mcp set execute-python={"command":"/home/alex/.local/bin/execute-python-mcp"}
-```
+# CLI (recommended)
+openclaw mcp list
+openclaw mcp show execute-python
+openclaw mcp unset execute-python
 
-Or using the more robust `python -m` approach:
-
-```bash
-/mcp set execute-python={"command":"python","args":["-m","execute_python_mcp"]}
-```
-
-### Advanced: Setting Environment Variables
-
-```json
-/mcp set execute-python={"command":"execute-python-mcp","env":{"PYTHONPATH":"/home/alex/myproject","MY_API_KEY":"..."}}
-```
-
-### View / Remove
-
-```bash
+# Or inside chat
 /mcp show execute-python
 /mcp unset execute-python
 ```
 
-After setting, **restart OpenClaw** or the relevant agent session for the tool to take effect.
-
 The tool will appear in the agent as `execute_python` (not `mcp_execute-python_execute_python`).
+
+### Advanced: Setting Environment Variables
+
+You can pass environment variables when registering:
+
+```bash
+openclaw mcp set execute-python '{"command":"execute-python-mcp","env":{"PYTHONPATH":"/home/alex/myproject","MY_API_KEY":"..."}}'
+```
 
 ## Quick Verification (Let the Agent Test It)
 
