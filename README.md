@@ -1,96 +1,96 @@
 # execute-python-mcp
 
-一個極度寬鬆的 MCP Server，提供 `execute_python` 工具，讓支援 MCP 的 Agent（特別是 **OpenClaw**）能以結構化方式執行 Python 程式碼。
+A minimal and extremely permissive MCP Server that provides the `execute_python` tool. It allows MCP-compatible agents (especially **OpenClaw**) to execute Python code in a clean, structured way.
 
-**設計目標**：讓小模型（small models）大幅減少直接使用 `python -c "..."` 或 `bash -c "python ..."` 的情況，改用乾淨的工具呼叫。
+**Design Goal**: Significantly reduce the need for small models to use raw `python -c "..."` or `bash -c "python ..."` commands by providing a proper tool interface.
 
-## 核心特色
+## Key Features
 
-- **極度寬鬆**：直接使用你當前 Python 環境執行，**完全不做 sandbox、不做權限控管**。
-- **原生套件可用**：你 `pip install` / `uv pip install` 的所有套件，在 Agent 裡都能直接 `import`。
-- **對小模型友善的錯誤回饋**：
-  - 發生 `ModuleNotFoundError` 時，自動附上 **Python 執行檔路徑 + Python 版本**，告訴你該用哪個環境裝套件。
-  - 發生路徑相關錯誤（`FileNotFoundError`、`PermissionError`、`OSError` 等）時，明確告訴你**實際執行時的工作目錄（cwd）**。
-- 參數極簡，只有 3 個，認知負擔低。
+- **Extremely Permissive**: Executes code directly in your current Python environment. **No sandboxing, no permission restrictions**.
+- **Native Package Access**: All packages you installed via `pip install` or `uv pip install` are immediately available for the agent to `import`.
+- **Small-Model-Friendly Error Feedback**:
+  - On `ModuleNotFoundError`, automatically appends the **Python executable path + Python version** so you know exactly which environment to install the package in.
+  - On path-related errors (`FileNotFoundError`, `PermissionError`, `OSError`, etc.), clearly reports the **actual working directory (cwd)** used during execution.
+- Minimal parameters (only 3), keeping cognitive load low for agents.
 
-## 安裝方式
+## Installation
 
 ```bash
 pip install execute-python-mcp
 ```
 
-或使用 uv（推薦）：
+Or using uv (recommended):
 
 ```bash
 uv pip install execute-python-mcp
 ```
 
-> **重要環境提醒**：請在你希望 Agent 使用的「那個 Python 環境」裡安裝。
-> 如果你有多個 conda / venv / pyenv 環境，Agent 能使用的套件取決於 `execute-python-mcp` 這個指令解析到哪個 Python。
+> **Important Environment Note**: Install this package in the exact Python environment you want the agent to use.
+> If you have multiple conda / venv / pyenv environments, the packages available to the agent depend on which Python the `execute-python-mcp` command resolves to.
 
-安裝後驗證指令是否可用：
+After installation, verify the command is available:
 
 ```bash
-execute-python-mcp --help    # 應該顯示 usage 或直接啟動（Ctrl-C 離開）
-which execute-python-mcp     # 查看實際指向的路徑
+execute-python-mcp --help    # Should show usage or start the server (Ctrl-C to exit)
+which execute-python-mcp     # Check which Python environment it points to
 ```
 
-## 啟動方式
+## Running the Server
 
-直接執行即可（使用 stdio transport，符合 MCP 標準）：
+Simply run the command (uses stdio transport, fully MCP compliant):
 
 ```bash
 execute-python-mcp
 ```
 
-這個程序會一直跑，等待 MCP Client 透過 stdin/stdout 與它通訊。通常不需要手動啟動，註冊到 OpenClaw / Claude Desktop 後會由 Client 自動管理生命週期。
+This process runs continuously and communicates with MCP clients via stdin/stdout. You usually do not need to start it manually — once registered with OpenClaw, Claude Desktop, or similar clients, the client will manage its lifecycle automatically.
 
-## 在 OpenClaw 中註冊此 MCP Server
+## Registering in OpenClaw
 
-OpenClaw 提供 `/mcp` 指令來管理 MCP servers（寫入 `mcp.servers` 配置）。
+OpenClaw provides the `/mcp` command to manage MCP servers (writes to `mcp.servers` configuration).
 
-### 最簡單註冊方式（推薦）
+### Recommended Registration
 
-在 OpenClaw 聊天視窗中輸入：
+In the OpenClaw chat, run:
 
-```
+```bash
 /mcp set execute-python={"command":"execute-python-mcp"}
 ```
 
-如果你的 `execute-python-mcp` 在特定路徑（例如使用 conda / mise / asdf）：
+If `execute-python-mcp` is in a specific location (e.g., conda / mise / asdf):
 
-```
+```bash
 /mcp set execute-python={"command":"/home/alex/.local/bin/execute-python-mcp"}
 ```
 
-或使用完整 python -m 方式（較穩）：
+Or using the more robust `python -m` approach:
 
-```
+```bash
 /mcp set execute-python={"command":"python","args":["-m","execute_python_mcp"]}
 ```
 
-### 一次設定多個環境變數（進階）
+### Advanced: Setting Environment Variables
 
 ```json
 /mcp set execute-python={"command":"execute-python-mcp","env":{"PYTHONPATH":"/home/alex/myproject","MY_API_KEY":"..."}}
 ```
 
-### 查看 / 移除
+### View / Remove
 
-```
+```bash
 /mcp show execute-python
 /mcp unset execute-python
 ```
 
-設定完成後，**重啟 OpenClaw** 或該 Agent 的會話，即可讓工具生效。
+After setting, **restart OpenClaw** or the relevant agent session for the tool to take effect.
 
-工具在 Agent 中會以 `execute_python` 這個名字出現（不是 `mcp_execute-python_execute_python`）。
+The tool will appear in the agent as `execute_python` (not `mcp_execute-python_execute_python`).
 
-## 簡單驗證方式（讓 Agent 測試）
+## Quick Verification (Let the Agent Test It)
 
-註冊完成後，在 OpenClaw 對話中直接對 Agent 說：
+After registration, ask your agent in OpenClaw:
 
-> 請使用 `execute_python` 工具執行以下程式碼，並把結果告訴我：
+> Please use the `execute_python` tool to run the following code and report the result back to me:
 > ```python
 > print("Hello from execute-python-mcp!")
 > import sys
@@ -98,7 +98,7 @@ OpenClaw 提供 `/mcp` 指令來管理 MCP servers（寫入 `mcp.servers` 配置
 > print("Success!")
 > ```
 
-正常情況下，Agent 應該會呼叫工具，並回傳類似：
+The agent should call the tool and return something like:
 
 ```json
 {
@@ -111,7 +111,7 @@ OpenClaw 提供 `/mcp` 指令來管理 MCP servers（寫入 `mcp.servers` 配置
 }
 ```
 
-### 測試套件可用性（重要）
+### Test Package Availability (Recommended)
 
 ```python
 import numpy as np
@@ -121,30 +121,30 @@ print("pandas:", pd.__version__)
 print("All good!")
 ```
 
-如果回報 `ModuleNotFoundError`，錯誤訊息裡會明確告訴你「請用這個 Python 執行檔去 pip install」。
+If a `ModuleNotFoundError` occurs, the error message will clearly indicate which Python executable should be used to install the package.
 
-## 工具參數說明（給模型看的也給人看）
+## Tool Parameters
 
-| 參數     | 類型     | 必填 | 預設值 | 說明 |
-|----------|----------|------|--------|------|
-| `code`   | string   | 是   | -      | 要執行的完整 Python 原始碼（可多行、含 import、def、for 迴圈等） |
-| `cwd`    | string   | 否   | 當前目錄 | 執行時的工作目錄。你的程式裡如果用相對路徑開檔，會以此為基準 |
-| `timeout`| integer  | 否   | 300    | 超時秒數（5 分鐘）。長時間訓練/推論請調大，快速小程式可調小（例如 30） |
+| Parameter | Type    | Required | Default     | Description |
+|-----------|---------|----------|-------------|-------------|
+| `code`    | string  | Yes      | -           | The complete Python source code to execute (supports multiline, imports, functions, loops, etc.) |
+| `cwd`     | string  | No       | Current dir | Working directory during execution. Relative paths in your code are resolved against this directory. |
+| `timeout` | integer | No       | 300         | Timeout in seconds (5 minutes). Increase for long-running training/inference; decrease for quick scripts (e.g., 30). |
 
-回傳永遠包含以下欄位（JSON）：
+The tool always returns the following fields (JSON):
 
-- `stdout`：標準輸出
-- `stderr`：標準錯誤（已自動加入環境診斷資訊）
-- `exit_code`：結束碼（0 = 成功）
-- `duration`：執行耗時（秒，浮點數）
-- `success`：布林值
-- `error_type`：失敗時的錯誤類型字串（`ModuleNotFoundError`、`SyntaxError`、`FileNotFoundError`...），成功時為 null
+- `stdout`: Standard output
+- `stderr`: Standard error (environment diagnostic information is automatically appended on errors)
+- `exit_code`: Exit code (0 = success)
+- `duration`: Execution time in seconds (float)
+- `success`: Boolean
+- `error_type`: Error type string on failure (`ModuleNotFoundError`, `SyntaxError`, `FileNotFoundError`, ...), or `null` on success
 
-## 常見問題與注意事項
+## Troubleshooting
 
-### 1. ModuleNotFoundError 怎麼辦？
+### 1. ModuleNotFoundError
 
-錯誤訊息會直接告訴你：
+The error message will include:
 
 ```
 [Environment Info for ModuleNotFoundError]
@@ -152,32 +152,32 @@ print("All good!")
   Python version: 3.11.9
 ```
 
-請**切換到該環境**執行 `pip install <套件>`，而不是用另一個 shell 的 python。
+**Solution**: Switch to that exact environment and run `pip install <package>`. Do not install from a different shell.
 
-### 2. 相對路徑找不到檔案？
+### 2. Relative paths cannot find files
 
-錯誤訊息會附上「實際執行時的 cwd」。請確認：
-- 你傳給 `cwd` 的路徑是否存在
-- 該目錄下真的有你要開的檔案
+The error message includes the **actual cwd** used at runtime. Please verify:
+- The `cwd` you passed actually exists
+- The target files exist in that directory
 
-### 3. 為什麼不做 sandbox / 權限控管？
+### 3. Why no sandbox / permission control?
 
-本專案的定位就是「讓 Agent 能真正使用你本機的完整環境」。如果你需要受控執行，請搭配其他 sandbox MCP server 或 Docker 方案。
+This project is intentionally designed to give agents full access to your local environment. If you need controlled execution, consider using other sandboxed MCP servers or Docker-based solutions.
 
-### 4. 長時間執行會被殺掉？
+### 4. Long-running tasks get killed?
 
-預設 300 秒（5 分鐘）。如需更長，請在呼叫時傳 `timeout: 1800`（30 分鐘）或更大值（上限 3600）。
+Default timeout is 300 seconds (5 minutes). For longer execution, pass `timeout: 1800` (30 minutes) or higher (maximum 3600).
 
-### 5. 與 OpenClaw / Claude / Cursor 相容性
+### 5. Compatibility
 
-本 server 只使用 stdio transport，與所有主流 MCP Client 相容（包含 OpenClaw、Claude Desktop、Claude Code、Cursor、Cline、Windsurf 等）。
+This server uses only stdio transport and is compatible with all major MCP clients, including OpenClaw, Claude Desktop, Claude Code, Cursor, Cline, Windsurf, etc.
 
-## 開發與貢獻
+## Development
 
 ```bash
 git clone https://github.com/alex-ht/execute-python-mcp.git
 cd execute-python-mcp
-pip install -e ".[dev]"   # 如果有 dev 依賴
+pip install -e ".[dev]"
 pytest -v
 ```
 
