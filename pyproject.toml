@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "execute-python-mcp"
+version = "0.1.0"
+description = "MCP Server providing execute_python tool for structured Python code execution - ideal for OpenClaw and small-model agents"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "AlexHT Hung" }
+]
+license = { text = "MIT" }
+keywords = ["mcp", "python", "code-execution", "openclaw", "agent", "tool"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "mcp>=1.26.0,<2",
+]
+
+[project.urls]
+Homepage = "https://github.com/alex-ht/execute-python-mcp"
+Repository = "https://github.com/alex-ht/execute-python-mcp"
+Issues = "https://github.com/alex-ht/execute-python-mcp/issues"
+
+[project.scripts]
+execute-python-mcp = "execute_python_mcp.__main__:main"
+
+[tool.setuptools]
+packages = ["execute_python_mcp"]
+
+[tool.setuptools.package-data]
+execute_python_mcp = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
