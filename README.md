@@ -16,15 +16,8 @@ A minimal and extremely permissive MCP Server that provides the `execute_python`
 ## Installation
 
 ```bash
-pip install execute-python-mcp
+pip install git+https://github.com/alex-ht/execute-python-mcp.git
 ```
-
-Or using uv (recommended):
-
-```bash
-uv pip install execute-python-mcp
-```
-
 > **Important Environment Note**: Install this package in the exact Python environment you want the agent to use.
 > If you have multiple conda / venv / pyenv environments, the packages available to the agent depend on which Python the `execute-python-mcp` command resolves to.
 

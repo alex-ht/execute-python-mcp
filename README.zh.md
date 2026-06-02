@@ -16,13 +16,7 @@
 ## 安裝方式
 
 ```bash
-pip install execute-python-mcp
-```
-
-或使用 uv（推薦）：
-
-```bash
-uv pip install execute-python-mcp
+pip install git+https://github.com/alex-ht/execute-python-mcp.git
 ```
 
 > **重要環境提醒**：請在你希望 Agent 使用的「那個 Python 環境」裡安裝。
