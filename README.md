@@ -140,7 +140,7 @@ If a `ModuleNotFoundError` occurs, the error message will clearly indicate which
 | Parameter | Type    | Required | Default     | Description |
 |-----------|---------|----------|-------------|-------------|
 | `code`    | string  | Yes      | -           | The complete Python source code to execute (supports multiline, imports, functions, loops, etc.) |
-| `cwd`     | string  | No       | Current dir | Working directory during execution. Relative paths in your code are resolved against this directory. |
+| `cwd`     | string  | Yes      | -           | Working directory during execution (required, no default). Relative paths in your code are resolved against this directory. Must be an existing directory. |
 | `timeout` | integer | No       | 300         | Timeout in seconds (5 minutes). Increase for long-running training/inference; decrease for quick scripts (e.g., 30). |
 
 The tool always returns the following fields (JSON):

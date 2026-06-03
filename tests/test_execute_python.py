@@ -13,7 +13,7 @@ from execute_python_mcp.server import execute_python_code
 
 
 def test_simple_print():
-    result = execute_python_code("print('hello from mcp')")
+    result = execute_python_code("print('hello from mcp')", cwd=os.getcwd())
     assert result["success"] is True
     assert result["exit_code"] == 0
     assert "hello from mcp" in result["stdout"]
@@ -22,7 +22,7 @@ def test_simple_print():
 
 
 def test_syntax_error():
-    result = execute_python_code("print('unclosed")
+    result = execute_python_code("print('unclosed", cwd=os.getcwd())
     assert result["success"] is False
     assert result["exit_code"] != 0
     assert result["error_type"] == "SyntaxError"
@@ -30,7 +30,7 @@ def test_syntax_error():
 
 
 def test_module_not_found_enrichment():
-    result = execute_python_code("import definitely_not_a_real_package_xyz_123")
+    result = execute_python_code("import definitely_not_a_real_package_xyz_123", cwd=os.getcwd())
     assert result["success"] is False
     assert result["error_type"] == "ModuleNotFoundError"
     # Must contain Python executable path and version info
@@ -40,7 +40,7 @@ def test_module_not_found_enrichment():
 
 
 def test_name_error():
-    result = execute_python_code("x = undefined_variable_zzz + 1")
+    result = execute_python_code("x = undefined_variable_zzz + 1", cwd=os.getcwd())
     assert result["success"] is False
     assert result["error_type"] == "NameError"
 
@@ -65,7 +65,7 @@ def test_invalid_cwd_reported():
 
 def test_timeout_kills_long_running():
     # Sleep 10s but timeout after 1s
-    result = execute_python_code("import time; time.sleep(10)", timeout=1)
+    result = execute_python_code("import time; time.sleep(10)", cwd=os.getcwd(), timeout=1)
     assert result["success"] is False
     assert result["error_type"] == "TimeoutError"
     assert "exceeded the 1s limit" in result["stderr"]
@@ -88,14 +88,14 @@ import sys
 print('to stdout')
 print('to stderr', file=sys.stderr)
 """
-    result = execute_python_code(code)
+    result = execute_python_code(code, cwd=os.getcwd())
     assert "to stdout" in result["stdout"]
     assert "to stderr" in result["stderr"]
     assert result["success"] is True
 
 
 def test_nonzero_exit():
-    result = execute_python_code("import sys; sys.exit(42)")
+    result = execute_python_code("import sys; sys.exit(42)", cwd=os.getcwd())
     assert result["success"] is False
     assert result["exit_code"] == 42
 

@@ -109,7 +109,7 @@ def _enrich_error_message(
 
 def execute_python_code(
     code: str,
-    cwd: Optional[str] = None,
+    cwd: str,
     timeout: int = 300,
 ) -> dict[str, Any]:
     """
@@ -122,9 +122,9 @@ def execute_python_code(
 
     Args:
         code: The Python source code to execute. Can be multi-line.
-        cwd: Optional working directory for the execution. Relative paths in code
-             (open('data.txt'), etc.) will resolve against this directory.
-             Defaults to the process cwd when the MCP server was started.
+        cwd: Working directory for the execution (required, no default).
+             Relative paths in code (open('data.txt'), etc.) will resolve against this directory.
+             Must be an existing directory.
         timeout: Maximum seconds to allow execution (default 300 = 5 minutes).
                  Use smaller values for quick one-liners; larger for long computations.
 
@@ -140,10 +140,7 @@ def execute_python_code(
     start_time = time.time()
 
     # Resolve effective cwd (must be absolute for clarity in error messages)
-    if cwd:
-        effective_cwd = os.path.abspath(os.path.expanduser(cwd))
-    else:
-        effective_cwd = os.getcwd()
+    effective_cwd = os.path.abspath(os.path.expanduser(cwd))
 
     # Early validation of cwd (before spawning) so we can report it clearly
     if not os.path.isdir(effective_cwd):
@@ -275,9 +272,8 @@ def create_mcp_server() -> FastMCP:
             "Parameters:\n"
             "  code (string, REQUIRED): The complete Python source code to run. Supports multiple lines, "
             "imports, functions, loops, etc. Write normal .py code.\n"
-            "  cwd (string, OPTIONAL): Working directory for the script. Use this when your code opens "
-            "relative files (e.g. 'data.csv', './output/'). Defaults to the directory where the MCP server "
-            "was started.\n"
+            "  cwd (string, REQUIRED): Working directory for the script (no default). Use this when your code opens "
+            "relative files (e.g. 'data.csv', './output/'). Must be an existing directory path.\n"
             "  timeout (integer, OPTIONAL): Max seconds before killing the execution. Default=300 (5 min). "
             "Use 30-60 for quick snippets; increase for long training/inference jobs.\n\n"
             "Returns (always):\n"
@@ -296,7 +292,7 @@ def create_mcp_server() -> FastMCP:
     )
     def execute_python(
         code: str,
-        cwd: Optional[str] = None,
+        cwd: str,
         timeout: int = 300,
     ) -> str:
         """
@@ -326,7 +322,7 @@ def create_mcp_server() -> FastMCP:
             timeout = 300
         timeout = max(5, min(timeout, 3600))  # 5s min, 1h max
 
-        if cwd is not None and not isinstance(cwd, str):
+        if not isinstance(cwd, str):
             cwd = str(cwd)
 
         result = execute_python_code(code=code, cwd=cwd, timeout=timeout)
